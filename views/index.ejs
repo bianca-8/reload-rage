@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReloadRage - View Tracker</title>
+    <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔥 ReloadRage</h1>
+            <p class="subtitle">The Ultimate Page View Competition</p>
+            <nav>
+                <% if (isLoggedIn) { %>
+                    <span>Welcome, <%= user.username %>!</span>
+                    <form method="POST" action="/logout" style="display: inline;">
+                        <button type="submit" class="btn btn-secondary">Logout</button>
+                    </form>
+                <% } else { %>
+                    <a href="/login" class="btn btn-primary">Login</a>
+                    <a href="/register" class="btn btn-secondary">Register</a>
+                <% } %>
+            </nav>
+        </header>
+
+        <main>
+            <% if (isLoggedIn) { %>
+                <div class="user-stats">
+                    <h2>Your Stats</h2>
+                    <div class="stat-card">
+                        <div class="stat-number" id="user-views"><%= user.view_count %></div>
+                        <div class="stat-label">Total Views</div>
+                    </div>
+                    <p class="reload-tip">💡 Refresh this page to increase your view count!</p>
+                </div>
+            <% } else { %>
+                <div class="welcome-message">
+                    <h2>Welcome to ReloadRage!</h2>
+                    <p>Join the competition and see who can get the most page views!</p>
+                    <p>Create an account to start tracking your views and climb the leaderboard.</p>
+                    <p>💡 <strong>Even without an account, your page views contribute to the total community count!</strong></p>
+                    <div class="actions">
+                        <button onclick="location.reload()" class="btn btn-secondary btn-large">
+                            🔄 Refresh & Add to Community Total
+                        </button>
+                    </div>
+                </div>
+            <% } %>
+
+            <div class="leaderboard">
+                <h2>🏆 Leaderboard</h2>
+                
+                <!-- Total Views Display -->
+                <div class="total-views-display">
+                    <div class="total-views-card">
+                        <div class="total-views-number" id="total-views"><%= totalViews %></div>
+                        <div class="total-views-label">Total Community Views</div>
+                    </div>
+                </div>
+                
+                <div class="leaderboard-container">
+                    <% if (leaderboard.length > 0) { %>
+                        <div class="leaderboard-list" id="leaderboard-list">
+                            <% leaderboard.forEach((player, index) => { %>
+                                <div class="leaderboard-item <%= isLoggedIn && player.username === user.username ? 'current-user' : '' %>">
+                                    <div class="rank">
+                                        <% if (index === 0) { %>🥇
+                                        <% } else if (index === 1) { %>🥈
+                                        <% } else if (index === 2) { %>🥉
+                                        <% } else { %>#<%= index + 1 %>
+                                        <% } %>
+                                    </div>
+                                    <div class="username"><%= player.username %></div>
+                                    <div class="views"><%= player.view_count %> views</div>
+                                </div>
+                            <% }); %>
+                        </div>
+                    <% } else { %>
+                        <p>No players yet. Be the first to join!</p>
+                    <% } %>
+                </div>
+            </div>
+
+            <% if (isLoggedIn) { %>
+                <div class="actions">
+                    <button onclick="location.reload()" class="btn btn-primary btn-large">
+                        🔄 Reload Page (+1 View)
+                    </button>
+                </div>
+            <% } %>
+        </main>
+
+        <footer>
+            <p>Keep reloading to climb the ranks! 🚀</p>
+        </footer>
+    </div>
+
+    <script>
+        // Auto-refresh leaderboard every 5 seconds
+        <% if (isLoggedIn) { %>
+        setInterval(async () => {
+            try {
+                const [leaderboardResponse, userStatsResponse, totalViewsResponse] = await Promise.all([
+                    fetch('/api/leaderboard'),
+                    fetch('/api/user-stats'),
+                    fetch('/api/total-views')
+                ]);
+                
+                if (leaderboardResponse.ok && userStatsResponse.ok && totalViewsResponse.ok) {
+                    const leaderboard = await leaderboardResponse.json();
+                    const userStats = await userStatsResponse.json();
+                    const totalViewsData = await totalViewsResponse.json();
+                    
+                    // Update user view count
+                    document.getElementById('user-views').textContent = userStats.view_count;
+                    
+                    // Update total views
+                    document.getElementById('total-views').textContent = totalViewsData.total_views;
+                    
+                    // Update leaderboard
+                    const leaderboardList = document.getElementById('leaderboard-list');
+                    leaderboardList.innerHTML = leaderboard.map((player, index) => {
+                        const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                        const isCurrentUser = player.username === '<%= user ? user.username : '' %>';
+                        return `
+                            <div class="leaderboard-item ${isCurrentUser ? 'current-user' : ''}">
+                                <div class="rank">${rankEmoji}</div>
+                                <div class="username">${player.username}</div>
+                                <div class="views">${player.view_count} views</div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (error) {
+                console.error('Error updating data:', error);
+            }
+        }, 5000);
+        <% } else { %>
+        // Refresh leaderboard and total views for non-logged-in users
+        setInterval(async () => {
+            try {
+                const [leaderboardResponse, totalViewsResponse] = await Promise.all([
+                    fetch('/api/leaderboard'),
+                    fetch('/api/total-views')
+                ]);
+                
+                if (leaderboardResponse.ok && totalViewsResponse.ok) {
+                    const leaderboard = await leaderboardResponse.json();
+                    const totalViewsData = await totalViewsResponse.json();
+                    
+                    // Update total views
+                    document.getElementById('total-views').textContent = totalViewsData.total_views;
+                    
+                    const leaderboardList = document.getElementById('leaderboard-list');
+                    if (leaderboardList) {
+                        leaderboardList.innerHTML = leaderboard.map((player, index) => {
+                            const rankEmoji = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`;
+                            return `
+                                <div class="leaderboard-item">
+                                    <div class="rank">${rankEmoji}</div>
+                                    <div class="username">${player.username}</div>
+                                    <div class="views">${player.view_count} views</div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating data:', error);
+            }
+        }, 5000);
+        <% } %>
+    </script>
+</body>
+</html>
