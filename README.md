@@ -156,37 +156,6 @@ PORT=8080 npm start
 ### Session Issues
 Clear your browser cookies if you experience login problems.
 
-## Deployment
-
-This app requires a Node.js server to run. GitHub Pages only hosts static files, so you'll need to use a proper hosting service:
-
-### Option 1: Render (Recommended - Free)
-1. Push your code to GitHub
-2. Go to [render.com](https://render.com) and sign up
-3. Connect your GitHub repository
-4. Create a new "Web Service"
-5. Use these settings:
-   - Build Command: `npm install`
-   - Start Command: `npm start`
-6. Deploy and get your live URL!
-
-### Option 2: Railway (Free tier available)
-1. Push your code to GitHub
-2. Go to [railway.app](https://railway.app)
-3. Connect your GitHub repository
-4. Deploy automatically with the included `railway.json`
-
-### Option 3: Vercel
-1. Push your code to GitHub
-2. Go to [vercel.com](https://vercel.com)
-3. Import your GitHub repository
-4. Deploy with the included `vercel.json` configuration
-
-### Environment Variables
-For production deployment, set:
-- `PORT` - Will be set automatically by most hosting services
-- `NODE_ENV=production` - For production optimizations
-
 ## License
 
 MIT License - Feel free to modify and distribute!
