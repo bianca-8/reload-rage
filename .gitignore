@@ -36,5 +36,8 @@ Thumbs.db
 *.swp
 *.swo
 
+# Python virtual environment
+.venv/
+
 # Database (optional - uncomment if you don't want to track the database)
 # database.db
